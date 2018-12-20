@@ -19,21 +19,21 @@ cd cext
 
 ## Why extend Python with C/C++
 
- 1. You want to call a function that is implemented in C, C++ or Fortran. This can give access to a vast collection of libraries so you won't have to rewrite the code in Python.
- 2. You have identified a performance bottleneck - reimplementing some parts of your Python code in C, C++ or Fortran will give you a performance boost
- 3. Make your code type safe. In contrast to C, C++ and Fortran, Python is not a typed language - you can pass any object to any Python function.  This can cause runtime failures in Python which cannot occur in C, C++ or Fortran, as the error would be caught by the compiler. 
+ 1. you want to call a function that is implemented in C, C++ or Fortran. This gives you access to a vast collection of libraries so you won't have re-invent the wheel.
+ 2. you have identified a performance bottleneck - reimplementing some parts of your Python code in C, C++ or Fortran will give you a performance boost
+ 3. make your code type safe. In contrast to C, C++ and Fortran, Python is not a typed language - you can pass any object to any Python function.  This can cause runtime failures in Python which cannot occur in C, C++ or Fortran, as the error would be caught by the compiler. 
 
 ### Pros
 
- * A good way to glue Python with an external library
- * Can be used to incrementally migrate code to C/C++
- * Very flexible
- * Simpler and easier to maintain than custom C extensions 
+ * a good way to glue Python with an external library, no need to compile interface code
+ * can be used to incrementally migrate code to C/C++
+ * very flexible, you can pass most priitive types, array types and struct's from Python to C and back
+ * simpler and easier to maintain than custom C extensions 
 
 ### Cons
 
- * Has a learning curve, one must understand how Python and C work
- * Mistakes often lead to segmentation faults, which can be hard to debug
+ * has a learning curve, one must understand how Python and C work
+ * mistakes often lead to segmentation faults, which can be hard to debug
 
 ## Learn the basics 
 
@@ -46,7 +46,7 @@ As an example, we'll assume that you have to compute the sum of all the elements
  * @return sum
  */
 extern "C"
-double mysum(int n, double* array) {
+double mysum(const int n, double* array) {
     double res = 0;
     for (int i = 0; i < n; ++i) {
         res += array[i];
@@ -66,16 +66,16 @@ setup(
     ext_modules=[Extension('mysum', ['mysum.cpp'],),],
 )
 ```
-You might have to add *include* directories and libraries if your C++ extension depends on external packages. 
+You might have to add include directories and libraries if your C++ extension depends on external packages. 
 An example of a `setup.py` file can be found [here](https://raw.githubusercontent.com/pletzer/scatter/master/cext/setup.py). 
 
 Calling 
 ```
 python setup.py build
 ```
-will compile the code and produce a shared library under `build/lib.linux-x86_64-3.6`, something like `mysum.cpython-36m-x86_64-linux-gnu.so`.
+will compile the code and produce a shared library under *build/lib.linux-x86_64-3.6*, something like *mysum.cpython-36m-x86_64-linux-gnu.so*.
 
-The extension `.so` indicates that the above is a shared library (also called dynamic-link library or shared object). The advantage of creating a shared library over a static library is that in the former the Python interpreter needs not be recompiled. The good news is that `setuptools` knows how to compile shared library so you won't have to worry about the details.
+The extension *.so* indicates that the above is a shared library (also called dynamic-link library or shared object). The advantage of creating a shared library over a static library is that in the former the Python interpreter needs not be recompiled. The good news is that `setuptools` knows how to compile shared library so you won't have to worry about the details.
 
 To call  `mysum` from Python we'll use the `ctypes` module. The steps are described below:
 
@@ -115,7 +115,7 @@ With this approach it is possible to specify extra restrictions on the NumPy arr
 
 ### Working example
 
-Let's return to our `mysum` C++ function, which we would like to call from Python.
+Let's return to our `mysum` C++ function, which we would like to call from Python:
 ```python
 import ctypes
 import numpy
@@ -150,17 +150,15 @@ Passing by reference, for instance `int&` can be achieved using `ctypes.byref(my
 The C type `NULL` will map to None.
 
 
-
-
 ## Exercises
 
-We've created a version of `scatter.py` that builds and calls a C++ external function `src/wave.cpp`. Compile the code using
+We've created a version of `scatter.py` that builds and calls a C++ external function *src/wave.cpp*. Compile the code using
 ```
 python setup.py build
 ```
 (Make sure you have the `BOOST_DIR` environment set as described [here.](https://nesi.github.io/perf-training/python-scatter/introduction))
 
- 1. profile the code and compare the timings with the results under `original` and `vect`
+ 1. profile the code and compare the timings with those obtained by running *scatter.py* under `original/` and `vect/`
  2. rewrite Python function `isInsideContour` defined in `scatter.py` in C++ and update file `setup.py` to compile your extension. 
  3. profile the code with your version of `isInsideContour` written in C++
 
